@@ -32,7 +32,8 @@ def convert(args):
             with open(file_path, "r", encoding="utf8") as f:
                 data = json.load(f)
             image_path = file_path.replace("annotations", "images")
-            image_path = image_path.replace("json", "png")
+            # TODO: Make image extension a variable
+            image_path = image_path.replace("json", "jpg")
             image = Image.open(image_path)
             width, length = image.size
             for item in data["form"]:
@@ -51,7 +52,7 @@ def convert(args):
                         )
                 else:
                     if len(words) == 1:
-                        fw.write(words[0]["text"] + "\tS-" + label.upper() + "\n")
+                        fw.write(words[0]["text"] + "\t" + label.upper() + "\n")
                         fbw.write(
                             words[0]["text"]
                             + "\t"
@@ -59,7 +60,7 @@ def convert(args):
                             + "\n"
                         )
                     else:
-                        fw.write(words[0]["text"] + "\tB-" + label.upper() + "\n")
+                        fw.write(words[0]["text"] + "\t" + label.upper() + "\n")
                         fbw.write(
                             words[0]["text"]
                             + "\t"
@@ -67,14 +68,14 @@ def convert(args):
                             + "\n"
                         )
                         for w in words[1:-1]:
-                            fw.write(w["text"] + "\tI-" + label.upper() + "\n")
+                            fw.write(w["text"] + "\t" + label.upper() + "\n")
                             fbw.write(
                                 w["text"]
                                 + "\t"
                                 + bbox_string(w["box"], width, length)
                                 + "\n"
                             )
-                        fw.write(words[-1]["text"] + "\tE-" + label.upper() + "\n")
+                        fw.write(words[-1]["text"] + "\t" + label.upper() + "\n")
                         fbw.write(
                             words[-1]["text"]
                             + "\t"
@@ -107,9 +108,9 @@ def seg_file(file_path, tokenizer, max_len):
             if current_subwords_len == 0:
                 continue
 
-            if (subword_len_counter + current_subwords_len) > max_len:
+            if (subword_len_counter + current_subwords_len) >= max_len:
                 fw_p.write("\n" + line + "\n")
-                subword_len_counter = 0
+                subword_len_counter = current_subwords_len
                 continue
 
             subword_len_counter += current_subwords_len

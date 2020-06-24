@@ -155,7 +155,8 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
 
     # multi-gpu training (should be after apex fp16 initialization)
     if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model)
+        pass
+        #model = torch.nn.DataParallel(model)
 
     # Distributed training (should be after apex fp16 initialization)
     if args.local_rank != -1:
@@ -264,6 +265,18 @@ def train(args, train_dataset, model, tokenizer, labels, pad_token_label_id):
                         for key, value in results.items():
                             tb_writer.add_scalar(
                                 "eval_{}".format(key), value, global_step
+                            )
+                        test_results, _ = evaluate(
+                            args,
+                            model,
+                            tokenizer,
+                            labels,
+                            pad_token_label_id,
+                            mode="test",
+                        )
+                        for key, value in test_results.items():
+                            tb_writer.add_scalar(
+                                "test_{}".format(key), value, global_step
                             )
                     tb_writer.add_scalar("lr", scheduler.get_lr()[0], global_step)
                     tb_writer.add_scalar(
@@ -675,7 +688,10 @@ def main():
         device = torch.device(
             "cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu"
         )
-        args.n_gpu = torch.cuda.device_count()
+        if device == 'cpu':
+            args.n_gpu = 0
+        else:
+            args.n_gpu = torch.cuda.device_count()
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.cuda.set_device(args.local_rank)
         device = torch.device("cuda", args.local_rank)
